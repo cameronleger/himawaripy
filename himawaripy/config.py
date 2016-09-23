@@ -10,6 +10,11 @@ level = 4
 resize_to = "3840x2160"
 overlay_path = expanduser("~/Pictures/Himawari/himawari-overlay.png")
 
+# Define the alternate background image and two paths for a transition GIF (forwards and backwards)
+alternate_path = expanduser("~/Pictures/background.png")
+alternate_transition_path = expanduser("~/Pictures/Himawari/himawari-transition.gif")
+reverse_transition_path = expanduser("~/Pictures/Himawari/himawari-transition-reverse.gif")
+
 # Define a hourly offset or let the script calculate it depending on your timezone
 # If auto_offset is True, then script will calculate your hour offset automatically depending on your location.
 # If hour_offset is greater than 0, then script will use it.

@@ -6,6 +6,12 @@ picture of Earth as its taken by
 [Himawari 8 (ひまわり8号)](https://en.wikipedia.org/wiki/Himawari_8) and sets it
 as your desktop background.
 
+## NOTE
+This branch of himawaripy does NOT set the background image. Instead, it merely
+fetches the image, stores it, and generates two transitions (to and from) the
+Himawari output and an alternate background image. It is up to you to set those
+as backgrounds images as necessary.
+
 Set a cronjob that runs in every 10 minutes to automatically get the
 near-realtime picture of Earth.
 
@@ -36,6 +42,10 @@ You should change the path of the overlay image and output size, which is by
 default `~/Pictures/Himawari/himawari-overlay.png` and `3840x2160`.
 The overlay image size should match the output size, and it should include
 and alpha channel that's transparent where the Earth from Himawari will be.
+
+You should change the path of the alternate image and output GIF images.
+After the Himawari image is generated, this will also create two GIF images
+that are transition animations to and from Himawari and the alternate image.
 
 ### Nitrogen
 If you use nitrogen for setting your wallpaper, you have to enter this in your

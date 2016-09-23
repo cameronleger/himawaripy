@@ -4,7 +4,7 @@ import sys
 import subprocess
 from distutils.version import LooseVersion
 
-from .config import resize_to, overlay_path
+from .config import resize_to, overlay_path, alternate_path, alternate_transition_path, reverse_transition_path
 
 
 def set_background(file_path):
@@ -94,6 +94,26 @@ def overlay_image(file_path, output_path):
     returnCode = subprocess.call(["composite", overlay_path, resize_path, output_path])
     if returnCode != 0:
         exit("Error overlaying himawari image: {}".format(returnCode))
+
+def transition_image(file_path):
+    print("\nGenerating himawari transitions")
+    process1 = subprocess.Popen(["convert", alternate_path, file_path,
+        "-resize", "1920x1080",
+        "-morph", "15",
+        "-blur", "4x3",
+        alternate_transition_path])
+    process2 = subprocess.Popen(["convert", file_path, alternate_path,
+        "-resize", "1920x1080",
+        "-morph", "15",
+        "-blur", "4x3",
+        reverse_transition_path])
+
+    returnCode1 = process1.wait()
+    returnCode2 = process2.wait()
+    if returnCode1 != 0:
+        exit("Error transitioning himari image: {}".format(returnCode1))
+    if returnCode2 != 0:
+        exit("Error transitioning himari image reversed: {}".format(returnCode2))
 
 # http://stackoverflow.com/a/21213358/4466589
 def get_desktop_environment():

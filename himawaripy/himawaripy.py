@@ -17,7 +17,7 @@ from pytz import timezone
 from dateutil.tz import tzlocal
 
 from .config import level, output_dir, auto_offset, hour_offset, dl_deadline
-from .utils import set_background, overlay_image, get_desktop_environment
+from .utils import set_background, overlay_image, transition_image, get_desktop_environment
 
 counter = None
 height = 550
@@ -121,8 +121,7 @@ def main():
     overlaid_output_file = join(output_dir, strftime("himawari-%Y%m%dT%H%M%S-overlaid.png", requested_time))
     overlay_image(output_file, overlaid_output_file)
 
-    if not set_background(overlaid_output_file):
-        exit("Your desktop environment '{}' is not supported.".format(get_desktop_environment()))
+    transition_image(overlaid_output_file)
 
     print("Done!")
 
