@@ -6,6 +6,12 @@ picture of Earth as its taken by
 [Himawari 8 (ひまわり8号)](https://en.wikipedia.org/wiki/Himawari_8) and sets it
 as your desktop background.
 
+## NOTE
+This branch of himawaripy does NOT set the background image. Instead, it merely
+fetches the image, stores it, and generates two transitions (to and from) the
+Himawari output and an alternate background image. It is up to you to set those
+as backgrounds images as necessary.
+
 Set a cronjob that runs in every 10 minutes to automatically get the
 near-realtime picture of Earth.
 
@@ -32,6 +38,10 @@ time to download the tiles.
 You can also change the path of the latest picture, which is by default
 `~/.himawari/himawari-latest.png`, by changing the `output_file` variable.
 
+You should change the path of the alternate image and output GIF images.
+After the Himawari image is generated, this will also create two GIF images
+that are transition animations to and from Himawari and the alternate image.
+
 ### Nitrogen
 If you use nitrogen for setting your wallpaper, you have to enter this in your
 `~/.config/nitrogen/bg-saved.cfg`.
@@ -48,6 +58,8 @@ You need a valid python3 installation including the python3-setuptools package:
     sudo apt install python3
     sudo apt install python3-setuptools 
     
+You also need the imagemagick command line tools package for your operating system
+
 ## Installation
 
     cd ~
