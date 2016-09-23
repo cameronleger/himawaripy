@@ -110,15 +110,15 @@ def main():
         tile = Image.open(BytesIO(tiledata))
         png.paste(tile, (width * x, height * y, width * (x + 1), height * (y + 1)))
 
-    for file in iglob(join(output_dir, "himawari-*.png")):
+    for file in iglob(join(output_dir, "himawari-latest*.png")):
         remove(file)
 
-    output_file = join(output_dir, strftime("himawari-%Y%m%dT%H%M%S.png", requested_time))
+    output_file = join(output_dir, "himawari-latest.png")
     print("\nSaving to '%s'..." % (output_file))
     makedirs(dirname(output_file), exist_ok=True)
     png.save(output_file, "PNG")
 
-    overlaid_output_file = join(output_dir, strftime("himawari-%Y%m%dT%H%M%S-overlaid.png", requested_time))
+    overlaid_output_file = join(output_dir, "himawari-overlaid.png")
     overlay_image(output_file, overlaid_output_file)
 
     transition_image(overlaid_output_file)

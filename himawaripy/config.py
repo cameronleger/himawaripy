@@ -1,8 +1,7 @@
-import appdirs
 from os.path import expanduser
 
 # Increases the quality and the size. Possible values: 4, 8, 16, 20
-level = 4
+level = 8
 
 # Define the final output size and a file (with alpha) to composite over the output
 # For example, an image of the Milky Way as seen from Earth
@@ -24,7 +23,7 @@ auto_offset = True
 hour_offset = 0
 
 # Path to the output directory
-output_dir = appdirs.user_cache_dir(appname="himawaripy", appauthor=False)
+output_dir = expanduser("~/Pictures/Himawari")
 
 # Deadline for the whole download process in minutes
 dl_deadline = 6
