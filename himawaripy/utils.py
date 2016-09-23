@@ -4,6 +4,8 @@ import sys
 import subprocess
 from distutils.version import LooseVersion
 
+from .config import resize_to, overlay_path
+
 
 def set_background(file_path):
     de = get_desktop_environment()
@@ -73,6 +75,25 @@ def set_background(file_path):
 
     return True
 
+def overlay_image(file_path, output_path):
+    resize_path = '{}.resized.png'.format(file_path)
+    print("\nResizing himawari output for screen")
+    returnCode = subprocess.call(["convert", file_path,
+        "-colorspace", "RGB",
+        "-resize", resize_to,
+        "-background", "black",
+        "-gravity", "center",
+        "-extent",
+        resize_to,
+        "-colorspace", "sRGB",
+        resize_path])
+    if returnCode != 0:
+        exit("Error resizing himawari image: {}".format(returnCode))
+
+    print("\nOverlaying image on himawari output")
+    returnCode = subprocess.call(["composite", overlay_path, resize_path, output_path])
+    if returnCode != 0:
+        exit("Error overlaying himawari image: {}".format(returnCode))
 
 # http://stackoverflow.com/a/21213358/4466589
 def get_desktop_environment():

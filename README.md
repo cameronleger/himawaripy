@@ -32,6 +32,11 @@ time to download the tiles.
 You can also change the path of the latest picture, which is by default
 `~/.himawari/himawari-latest.png`, by changing the `output_file` variable.
 
+You should change the path of the overlay image and output size, which is by
+default `~/Pictures/Himawari/himawari-overlay.png` and `3840x2160`.
+The overlay image size should match the output size, and it should include
+and alpha channel that's transparent where the Earth from Himawari will be.
+
 ### Nitrogen
 If you use nitrogen for setting your wallpaper, you have to enter this in your
 `~/.config/nitrogen/bg-saved.cfg`.
@@ -48,6 +53,8 @@ You need a valid python3 installation including the python3-setuptools package:
     sudo apt install python3
     sudo apt install python3-setuptools 
     
+You also need the imagemagick command line tools package for your operating system
+
 ## Installation
 
     cd ~
