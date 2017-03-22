@@ -5,6 +5,7 @@ from datetime import timedelta, datetime
 import io
 import itertools as it
 import json
+from lxml import html
 import multiprocessing as mp
 import multiprocessing.dummy as mp_dummy
 import os
@@ -15,6 +16,7 @@ import urllib.request
 from glob import iglob, glob
 import threading
 import time
+from logging import warnings
 
 import appdirs
 from PIL import Image, ImageDraw, ImageFilter
@@ -26,8 +28,12 @@ from .utils import set_background, get_desktop_environment
 # Semantic Versioning: Major, Minor, Patch
 HIMAWARIPY_VERSION = (2, 0, 0)
 counter = None
-HEIGHT = 550
-WIDTH = 550
+HEIGHT = 11000
+WIDTH = 11000
+BASE_URL = "http://rammb.cira.colostate.edu/ramsdis/online"
+
+# The image is yuuge
+warnings.simplefilter('ignore', Image.DecompressionBombWarning)
 
 
 def calculate_time_offset(latest_date, auto, preferred_offset):
@@ -137,20 +143,73 @@ def download(url):
         sys.exit("Could not download '{}'!\n".format(url))
 
 
+def find_closest_recent_time(html_tree, requested_time):
+    requested_time_string = strftime("%Y-%m-%d %H:%M", requested_time)
+    requested_time = datetime(*requested_time[:6])
+
+    ideal_match = html_tree.xpath("//form[@id='select_images']/table/tr/td[contains(., '{}')]/text()".format(requested_time_string))
+    if ideal_match:
+        return ideal_match[0]
+
+    recent_times = html_tree.xpath("//form[@id='select_images']/table/tr/td[1]/text()")
+
+    closest_match = None
+    closest_match_diff = None
+    closest_match_diff_prev = None
+
+    for recent_time_string in recent_times:
+        recent_time = datetime.strptime(recent_time_string, "%Y-%m-%d %H:%M")
+
+        if closest_match is None:
+            closest_match = recent_time_string
+            if recent_time > requested_time:
+                closest_match_diff = recent_time - requested_time
+            else:
+                closest_match_diff = requested_time - recent_time
+            continue
+
+        closest_match_diff_prev = closest_match_diff
+        if recent_time > requested_time:
+            closest_match_diff = recent_time - requested_time
+        else:
+            closest_match_diff = requested_time - recent_time
+
+        if closest_match_diff == closest_match_diff_prev:
+            # print("Difference is the same, picking latter... {} == {}".format(closest_match_diff, closest_match_diff_prev))
+            return closest_match
+
+        elif closest_match_diff < closest_match_diff_prev:
+            # print("Getting closer... {} < {}".format(closest_match_diff, closest_match_diff_prev))
+            closest_match = recent_time_string
+
+        else:
+            # print("Getting farther, stopping... {} !< {}".format(closest_match_diff, closest_match_diff_prev))
+            return closest_match
+
 def thread_main(args):
     global counter
     counter = mp.Value("i", 0)
 
-    level = args.level  # since we are going to use it a lot of times
-
     print("Updating...")
-    latest_json = download("http://himawari8-dl.nict.go.jp/himawari8/img/D531106/latest.json")
-    latest = strptime(json.loads(latest_json.decode("utf-8"))["date"], "%Y-%m-%d %H:%M:%S")
+    latest_html = download("{}/archive_hi_res.asp?data_folder=himawari-8/full_disk_ahi_natural_color&width=800&height=800".format(BASE_URL))
+    html_tree = html.fromstring(latest_html)
 
-    print("Latest version: {} GMT.".format(strftime("%Y/%m/%d %H:%M:%S", latest)))
+    latest_time = html_tree.xpath("//form[@id='select_images']/table/tr[2]/td[1]/text()")[0]
+    latest = strptime(latest_time, "%Y-%m-%d %H:%M")
+
+    print("Latest version: {} GMT.".format(strftime("%Y/%m/%d %H:%M", latest)))
     requested_time = calculate_time_offset(latest, args.auto_offset, args.offset)
     if args.auto_offset or args.offset != 10:
-        print("Offset version: {} GMT.".format(strftime("%Y/%m/%d %H:%M:%S", requested_time)))
+        print("Offset version: {} GMT.".format(strftime("%Y/%m/%d %H:%M", requested_time)))
+
+    closest_match = find_closest_recent_time(html_tree, requested_time)
+    print("Found closest match: {} GMT.".format(closest_match))
+
+    download_url = html_tree.xpath("//form[@id='select_images']/table/tr/td[contains(., '{}')]/following-sibling::td[5]/a".format(closest_match))
+    if not download_url:
+        sys.exit("Unable to find download URL")
+    download_url = "{}/{}".format(BASE_URL, download_url[0].get("href"))
+    print("Download URL: {}".format(download_url))
 
     if args.composite_over is not None:
         print("Opening image to composite over...")
@@ -159,18 +218,11 @@ def thread_main(args):
         except Exception as e:
             sys.exit("Unable to open --composite-over image!\n")
 
-    himawari_width = WIDTH * level
-    himawari_height = HEIGHT * level
-    himawari_img = Image.new("RGB", (himawari_width, himawari_height))
+    himawari_width = WIDTH
+    himawari_height = HEIGHT
+    print("Downloading image...")
+    himawari_img = Image.open(io.BytesIO(download(download_url)))
     output_img = himawari_img
-
-    p = mp_dummy.Pool(level * level)
-    print("Downloading tiles...")
-    res = p.map(download_chunk, it.product(range(level), range(level), (requested_time,), (args.level,)))
-
-    for (x, y, tiledata) in res:
-        tile = Image.open(io.BytesIO(tiledata))
-        himawari_img.paste(tile, (WIDTH * x, HEIGHT * y, WIDTH * (x + 1), HEIGHT * (y + 1)))
 
     if args.composite_over is not None:
         print("Compositing over input image")
